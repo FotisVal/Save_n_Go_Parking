@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Save Parking n Go</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #121212;
+            color: #ffffff;
+            height: 100vh; /* ✅ Full screen height */
+            display: flex;
+            flex-direction: column;
+        }
+        .container {
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+            margin: 20px auto;
+        }
+        h2 {
+            color: #ff9800;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .navigate-btn {
+            background: #ff9800;
+            color: white;
+        }
+        button:hover {
+            opacity: 0.8;
+        }
+        #status {
+            margin-top: 15px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        /* ✅ Image fills the remaining space */
+        .footer {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .footer img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* ✅ Fills space without distortion */
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Save Parking n Go</h2>
+        <p id="status">Fetching location...</p>
+        <button class="navigate-btn" onclick="navigateToLocation()">🚶 Start Navigation</button>
+    </div>
+
+    <!-- ✅ Image that fills the remaining screen space -->
+    <div class="footer">
+        <img src="https://raw.githubusercontent.com/FotisVal/Save_n_Go_Parking/dc0946257e4cc953cafcbcf784fcfada50a75cae/Screenshot_2025-03-17-03-18-34-42_64ef5fc2000c1caa954c114bb372e1d5.jpg" alt="Screenshot">
+    </div>
+
+    <script>
+        let savedLatitude = null;
+        let savedLongitude = null;
+
+        function saveLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        savedLatitude = position.coords.latitude;
+                        savedLongitude = position.coords.longitude;
+
+                        localStorage.setItem("savedLatitude", savedLatitude);
+                        localStorage.setItem("savedLongitude", savedLongitude);
+
+                        document.getElementById("status").innerText = 
+                            "Location Saved: " + savedLatitude + ", " + savedLongitude + " 🗺️📍";
+                    },
+                    function(error) {
+                        document.getElementById("status").innerText = 
+                            "Error retrieving location.";
+                    }
+                );
+            } else {
+                document.getElementById("status").innerText = 
+                    "Geolocation is not supported by this browser.";
+            }
+        }
+
+        function navigateToLocation() {
+            savedLatitude = localStorage.getItem("savedLatitude");
+            savedLongitude = localStorage.getItem("savedLongitude");
+
+            if (savedLatitude && savedLongitude) {
+                const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${savedLatitude},${savedLongitude}&travelmode=walking&dir_action=navigate`;
+                window.open(mapsUrl, "_blank");
+            } else {
+                document.getElementById("status").innerText = 
+                    "No saved location found.";
+            }
+        }
+
+        window.onload = function() {
+            savedLatitude = localStorage.getItem("savedLatitude");
+            savedLongitude = localStorage.getItem("savedLongitude");
+
+            if (savedLatitude && savedLongitude) {
+                document.getElementById("status").innerText = 
+                    "Saved Location: " + savedLatitude + ", " + savedLongitude + " 🗺️📍";
+            } else {
+                saveLocation();
+            }
+
+            // ✅ Warning before page refresh
+            window.addEventListener("beforeunload", function (event) {
+                event.preventDefault();
+                event.returnValue = "Are you sure you want to refresh? Your saved location will be lost!";
+            });
+
+            // ✅ Block F5 & Ctrl+R
+            document.addEventListener("keydown", function (event) {
+                if ((event.ctrlKey && (event.key === "r" || event.key === "R")) || event.key === "F5") {
+                    event.preventDefault();
+                    if (!confirm("Are you sure you want to refresh? Your saved location will be lost!")) {
+                        return;
+                    }
+                    location.reload();
+                }
+            });
+        };
+    </script>
+
+</body>
+</html>
